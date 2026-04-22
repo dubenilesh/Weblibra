@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WebLibra — Web Office Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@600&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════════════
+   WEBLIBRA — CSS VARIABLES & RESET
+═══════════════════════════════════════════════════════ */
+:root {
+  --font-ui: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-display: 'Playfair Display', serif;
+
+  --bg-app: #eef1f6;
+  --bg-surface: #ffffff;
+  --bg-ribbon: #ffffff;
+  --bg-titlebar: #1a3fa8;
+  --bg-titlebar2: #1232c4;
+  --bg-tab: #dde3ef;
+  --bg-tab-active: #ffffff;
+  --bg-hover: #e0e9ff;
+  --bg-input: #ffffff;
+  --bg-sidebar: #f5f7fb;
+
+  --text-primary: #0f1b3d;
+  --text-secondary: #4a5a80;
+  --text-muted: #8a9bb8;
+  --text-on-accent: #ffffff;
+
+  --accent: #1a3fa8;
+  --accent2: #2554d4;
+  --accent-hover: #1232c4;
+  --accent-light: #dce7ff;
+  --accent-ai: #7c3aed;
+
+  --border: #d4ddf0;
+  --border-focus: #1a3fa8;
+
+  --shadow-sm: 0 1px 4px rgba(15,27,61,.08);
+  --shadow-md: 0 4px 16px rgba(15,27,61,.12);
+  --shadow-lg: 0 12px 40px rgba(15,27,61,.18);
+
+  --titlebar-h: 42px;
+  --tabbar-h: 36px;
+  --ribbon-h: 96px;
+  --statusbar-h: 28px;
+  --page-w: 816px;
+}
+[data-theme="dark"] {
+  --bg-app: #0d1117;
+  --bg-surface: #161b27;
+  --bg-ribbon: #1c2333;
+  --bg-titlebar: #0d1117;
+  --bg-titlebar2: #111827;
+  --bg-tab: #111827;
+  --bg-tab-active: #161b27;
+  --bg-hover: #1e2d4a;
+  --bg-input: #1c2333;
+  --bg-sidebar: #111827;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #484f58;
+  --accent: #4d8ef0;
+  --accent2: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-light: #1e2d4a;
+  --border: #21262d;
+  --border-focus: #4d8ef0;
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.4);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font-ui);font-size:13px;color:var(--text-primary);background:var(--bg-app);-webkit-font-smoothing:antialiased}
+button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+[contenteditable]{outline:none}
+
+/* ═══════════════════════════════════════════════════════
+   LAYOUT SHELL
+═══════════════════════════════════════════════════════ */
+#app{display:grid;grid-template-rows:var(--titlebar-h) var(--tabbar-h) var(--ribbon-h) 1fr var(--statusbar-h);height:100vh;overflow:hidden}
+#app.no-tabs{grid-template-rows:var(--titlebar-h) 0px var(--ribbon-h) 1fr var(--statusbar-h)}
+.shell-content{overflow:hidden;background:var(--bg-app);position:relative}
+
+/* ═══════════════════════════════════════════════════════
+   TITLEBAR
+═══════════════════════════════════════════════════════ */
+#titlebar{
+  display:flex;align-items:center;gap:10px;padding:0 14px;
+  background:linear-gradient(135deg,var(--bg-titlebar),var(--bg-titlebar2));
+  color:#fff;user-select:none;position:relative;overflow:hidden;
+}
+#titlebar::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
+  pointer-events:none;
+}
+.tb-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;letter-spacing:.3px}
+.tb-logo-icon{
+  width:28px;height:28px;background:rgba(255,255,255,.2);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-size:16px;font-weight:600;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.tb-logo-name span{color:rgba(255,255,255,.6);font-weight:300}
+.tb-save{flex:1;display:flex;align-items:center;gap:5px;font-size:11px;opacity:.75;padding-left:16px}
+.tb-save svg{animation:none}.saving .tb-save svg{animation:spin 1s linear infinite}
+.tb-controls{display:flex;align-items:center;gap:4px;margin-left:auto}
+.tb-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:6px;
+  color:rgba(255,255,255,.8);transition:background .15s;font-size:13px;
+}
+.tb-btn:hover{background:rgba(255,255,255,.15)}
+.tb-user{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.9;padding:0 8px;border-left:1px solid rgba(255,255,255,.2);margin-left:4px}
+.tb-avatar{
+  width:24px;height:24px;background:rgba(255,255,255,.25);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DOC TABBAR
+═══════════════════════════════════════════════════════ */
+#tabbar{
+  display:flex;align-items:stretch;
+  background:var(--bg-tab);border-bottom:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+}
+#tabbar::-webkit-scrollbar{display:none}
+.doc-tab{
+  display:flex;align-items:center;gap:5px;
+  padding:0 12px;min-width:130px;max-width:200px;
+  border-right:1px solid var(--border);
+  font-size:12px;color:var(--text-secondary);
+  cursor:pointer;position:relative;transition:background .12s;
+  white-space:nowrap;user-select:none;
+}
+.doc-tab:hover{background:var(--bg-hover)}
+.doc-tab.active{
+  background:var(--bg-tab-active);color:var(--accent);
+  font-weight:500;
+}
+.doc-tab.active::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);
+}
+.doc-tab-name{flex:1;overflow:hidden;text-overflow:ellipsis}
+.doc-tab-dot{color:var(--accent);margin-left:2px;font-size:10px}
+.doc-tab-close{
+  width:16px;height:16px;border-radius:3px;display:flex;align-items:center;
+  justify-content:center;font-size:12px;opacity:.4;flex-shrink:0;transition:all .12s;
+}
+.doc-tab-close:hover{opacity:1;background:var(--bg-hover)}
+.tab-new-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:36px;font-size:18px;color:var(--text-muted);
+  flex-shrink:0;transition:color .12s;
+}
+.tab-new-btn:hover{color:var(--accent)}
+
+/* ═══════════════════════════════════════════════════════
+   RIBBON
+═══════════════════════════════════════════════════════ */
+#ribbon{
+  background:var(--bg-ribbon);border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow-sm);display:flex;flex-direction:column;
+}
+.ribbon-tabs{display:flex;padding:0 8px;border-bottom:1px solid var(--border)}
+.ribbon-tab-btn{
+  padding:5px 14px;font-size:12px;font-weight:500;
+  color:var(--text-secondary);border-radius:5px 5px 0 0;
+  border-bottom:2px solid transparent;transition:all .12s;
+}
+.ribbon-tab-btn:hover{color:var(--accent);background:var(--accent-light)}
+.ribbon-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--accent-light)}
+.ribbon-body{display:flex;align-items:stretch;padding:4px 6px;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.ribbon-body::-webkit-scrollbar{display:none}
+.ribbon-panel{display:none;width:100%;align-items:stretch;gap:2px}
+.ribbon-panel.active{display:flex}
+.rg{display:flex;flex-direction:column;align-items:flex-start;padding:2px 5px 0;min-width:fit-content;position:relative}
+.rg-body{display:flex;align-items:center;gap:2px;flex:1;flex-wrap:wrap}
+.rg-label{font-size:10px;color:var(--text-muted);padding-top:1px;width:100%;text-align:center;white-space:nowrap}
+.rdiv{width:1px;background:var(--border);margin:4px 3px;align-self:stretch}
+.rb{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:4px 5px;border-radius:5px;min-width:28px;min-height:28px;
+  color:var(--text-primary);transition:background .12s,color .12s;gap:2px;
+  font-size:12px;
+}
+.rb:hover{background:var(--bg-hover);color:var(--accent)}
+.rb.active{background:var(--accent-light);color:var(--accent)}
+.rb:disabled{opacity:.3;cursor:default;pointer-events:none}
+.rb-lg{min-width:42px;padding:4px 8px}
+.rb-label{font-size:9px;white-space:nowrap}
+.rb-row{display:flex;align-items:center;gap:1px}
+.r-sel{
+  height:26px;padding:0 6px;border:1px solid var(--border);
+  border-radius:5px;background:var(--bg-input);font-size:12px;
+  cursor:pointer;transition:border-color .12s;min-width:50px;
+}
+.r-sel:focus{outline:none;border-color:var(--border-focus)}
+.r-color{width:26px;height:26px;border-radius:5px;border:1px solid var(--border);cursor:pointer;padding:2px}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN EDITORS
+═══════════════════════════════════════════════════════ */
+/* Dashboard */
+#dashboard{
+  height:100%;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;
+  padding:32px 24px 64px;
+}
+.dash-inner{width:100%;max-width:820px;display:flex;flex-direction:column;gap:28px}
+.dash-header h1{font-size:22px;font-weight:700;font-family:var(--font-display);color:var(--text-primary)}
+.dash-header p{color:var(--text-secondary);margin-top:4px;font-size:13px}
+.dash-section-title{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:700;color:var(--text-secondary);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;
+}
+.new-cards{display:flex;gap:14px;flex-wrap:wrap}
+.new-card{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;width:130px;height:110px;
+  background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:12px;font-size:12px;font-weight:500;
+  color:var(--text-secondary);transition:all .18s;box-shadow:var(--shadow-sm);
+}
+.new-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--accent);color:var(--accent)}
+.new-card .card-icon{font-size:28px;line-height:1}
+.upload-zone{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:18px 24px;border:2px dashed var(--border);border-radius:12px;
+  color:var(--text-muted);font-size:13px;cursor:pointer;transition:all .15s;
+}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.recent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.recent-card{
+  display:flex;flex-direction:column;gap:6px;padding:14px;
+  background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:10px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm);
+}
+.recent-card:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.recent-card-icon{font-size:22px}
+.recent-card-name{font-size:12px;font-weight:500;word-break:break-all;color:var(--text-primary)}
+.recent-card-date{font-size:11px;color:var(--text-muted)}
+.empty-msg{color:var(--text-muted);font-size:13px;padding:12px 0}
+
+/* Writer Editor */
+#writer-pane{height:100%;overflow:auto;background:var(--bg-app);display:none}
+#writer-pane.active{display:block}
+.writer-scroll{display:flex;justify-content:center;padding:28px 24px 60px;min-height:100%}
+.writer-page{
+  width:var(--page-w);min-height:1056px;background:var(--bg-surface);
+  box-shadow:var(--shadow-md);border-radius:2px;padding:72px 80px;
+  position:relative;
+}
+#writer-editor{
+  outline:none;min-height:880px;line-height:1.65;
+  color:var(--text-primary);font-family:'Calibri',var(--font-ui);font-size:14px;
+}
+#writer-editor h1{font-size:2em;font-weight:700;font-family:var(--font-display);margin:.5em 0}
+#writer-editor h2{font-size:1.5em;font-weight:600;margin:.6em 0}
+#writer-editor h3{font-size:1.2em;font-weight:600;margin:.7em 0}
+#writer-editor p{margin:0 0 .7em}
+#writer-editor ul,#writer-editor ol{padding-left:1.5em;margin-bottom:.7em}
+#writer-editor blockquote{border-left:3px solid var(--accent);padding-left:1em;color:var(--text-secondary);margin:1em 0;font-style:italic}
+#writer-editor code{font-family:var(--font-mono);font-size:.9em;background:var(--accent-light);padding:.1em .35em;border-radius:3px}
+#writer-editor pre{background:var(--bg-app);padding:1em;border-radius:8px;overflow-x:auto;margin:1em 0;border:1px solid var(--border)}
+#writer-editor table{width:100%;border-collapse:collapse;margin:1em 0}
+#writer-editor th,#writer-editor td{border:1px solid var(--border);padding:7px 10px;text-align:left}
+#writer-editor th{background:var(--accent-light);font-weight:600}
+#writer-editor img{max-width:100%;border-radius:4px;margin:4px 0}
+#writer-editor a{color:var(--accent);text-decoration:underline}
+#writer-editor hr{border:none;border-top:2px solid var(--border);margin:1.5em 0}
+.writer-placeholder:empty::before{content:attr(data-placeholder);color:var(--text-muted);pointer-events:none}
+
+/* Calc Editor */
+#calc-pane{height:100%;display:none;flex-direction:column;background:var(--bg-surface)}
+#calc-pane.active{display:flex}
+#calc-formula-bar{
+  display:flex;align-items:center;gap:8px;padding:4px 8px;
+  border-bottom:1px solid var(--border);background:var(--bg-ribbon);flex-shrink:0;
+}
+#calc-cell-addr{
+  min-width:52px;font-size:12px;font-weight:600;text-align:center;
+  padding:2px 6px;border:1px solid var(--border);border-radius:4px;
+  background:var(--bg-surface);color:var(--text-primary);
+}
+.calc-fx{font-style:italic;color:var(--text-muted);font-size:13px;font-weight:500}
+#calc-formula-input{
+  flex:1;height:26px;padding:0 8px;border:1px solid var(--border);
+  border-radius:5px;font-size:12px;background:var(--bg-input);
+}
+#calc-formula-input:focus{outline:none;border-color:var(--border-focus)}
+#calc-canvas-wrap{flex:1;overflow:auto;position:relative;cursor:cell}
+#calc-canvas{display:block}
+#calc-input-overlay{
+  position:absolute;border:2px solid var(--accent);outline:none;
+  padding:0 4px;font-size:12px;font-family:var(--font-ui);
+  background:#fff;z-index:10;display:none;
+}
+
+/* Impress Editor */
+#impress-pane{height:100%;display:none;background:var(--bg-app)}
+#impress-pane.active{display:flex}
+#impress-panel{
+  width:188px;flex-shrink:0;border-right:1px solid var(--border);
+  background:var(--bg-sidebar);display:flex;flex-direction:column;overflow:hidden;
+}
+#impress-panel-header{padding:8px;border-bottom:1px solid var(--border);flex-shrink:0}
+.im-add-btn{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  width:100%;padding:7px 10px;background:var(--accent);color:#fff;
+  border-radius:7px;font-size:12px;font-weight:600;transition:background .15s;
+}
+.im-add-btn:hover{background:var(--accent-hover)}
+#impress-thumbs{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin}
+.im-thumb-wrap{display:flex;flex-direction:column;gap:3px}
+.im-thumb{
+  position:relative;width:100%;aspect-ratio:16/9;
+  border:2px solid var(--border);border-radius:5px;
+  cursor:pointer;overflow:hidden;transition:border-color .15s;background:#fff;
+}
+.im-thumb:hover,.im-thumb.active{border-color:var(--accent)}
+.im-thumb.active{box-shadow:0 0 0 2px var(--accent-light)}
+.im-thumb-num{
+  position:absolute;top:3px;left:4px;font-size:9px;color:var(--text-muted);
+  background:rgba(255,255,255,.8);padding:1px 3px;border-radius:2px;
+}
+.im-thumb-el{position:absolute;pointer-events:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.im-thumb-actions{display:flex;justify-content:center;gap:4px}
+.im-thumb-actions button{
+  padding:2px 5px;border-radius:3px;font-size:11px;
+  color:var(--text-muted);transition:all .12s;
+}
+.im-thumb-actions button:hover:not(:disabled){background:var(--bg-hover);color:var(--accent)}
+.im-thumb-actions button:disabled{opacity:.3}
+#impress-canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#impress-toolbar{
+  display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--bg-ribbon);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+#impress-toolbar button,#impress-toolbar label{
+  display:flex;align-items:center;gap:4px;padding:4px 8px;
+  border-radius:5px;font-size:12px;cursor:pointer;
+  color:var(--text-primary);transition:background .12s;
+}
+#impress-toolbar button:hover,#impress-toolbar label:hover{background:var(--bg-hover);color:var(--accent)}
+.im-slide-count{margin-left:auto;font-size:11px;color:var(--text-muted)}
+#impress-canvas-scroll{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:28px}
+#impress-slide{
+  position:relative;width:880px;height:495px;flex-shrink:0;
+  box-shadow:var(--shadow-lg);border-radius:3px;overflow:hidden;background:#fff;
+}
+.im-el{
+  position:absolute;cursor:pointer;padding:4px 8px;
+  border:2px solid transparent;border-radius:3px;
+  line-height:1.3;transition:border-color .1s;display:flex;align-items:center;
+}
+.im-el:hover{border-color:rgba(26,63,168,.35)}
+.im-el.selected{border-color:var(--accent);background:rgba(26,63,168,.05)}
+.im-el textarea{
+  width:100%;height:100%;border:none;outline:none;
+  background:transparent;resize:none;font:inherit;color:inherit;
+}
+
+/* ═══════════════════════════════════════════════════════
+   STATUS BAR
+═══════════════════════════════════════════════════════ */
+#statusbar{
+  display:flex;align-items:center;gap:16px;padding:0 14px;
+  background:var(--accent);color:rgba(255,255,255,.9);
+  font-size:11px;user-select:none;
+}
+.sb-sep{width:1px;height:14px;background:rgba(255,255,255,.25);flex-shrink:0}
+.sb-zoom{display:flex;align-items:center;gap:6px;margin-left:auto}
+.sb-zoom button{
+  color:rgba(255,255,255,.85);padding:2px 6px;border-radius:3px;
+  font-size:13px;transition:background .12s;
+}
+.sb-zoom button:hover{background:rgba(255,255,255,.2)}
+#zoom-range{width:80px;accent-color:#fff;cursor:pointer}
+#zoom-val{min-width:36px;text-align:right}
+
+/* ═══════════════════════════════════════════════════════
+   AI ASSISTANT
+═══════════════════════════════════════════════════════ */
+#ai-fab{
+  position:fixed;right:20px;bottom:42px;
+  width:46px;height:46px;border-radius:50%;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 18px rgba(124,58,237,.45);z-index:200;
+  transition:transform .15s,box-shadow .15s;font-size:18px;
+}
+#ai-fab:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(124,58,237,.6)}
+#ai-panel{
+  position:fixed;right:18px;bottom:96px;width:360px;max-height:78vh;
+  background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:14px;box-shadow:var(--shadow-lg);
+  display:none;flex-direction:column;z-index:199;overflow:hidden;
+}
+#ai-panel.open{display:flex}
+.ai-header{
+  display:flex;align-items:center;gap:8px;padding:12px 14px;
+  border-bottom:1px solid var(--border);font-weight:600;font-size:13px;
+  background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(168,85,247,.06));
+}
+.ai-close{
+  margin-left:auto;width:24px;height:24px;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-muted);transition:all .12s;font-size:14px;
+}
+.ai-close:hover{background:var(--bg-hover);color:var(--text-primary)}
+.ai-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:11px}
+.ai-label{font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;display:flex;flex-direction:column;gap:5px}
+.ai-inp{
+  padding:8px 10px;border:1px solid var(--border);border-radius:7px;
+  font-size:12px;background:var(--bg-input);width:100%;transition:border-color .12s;
+}
+.ai-inp:focus{outline:none;border-color:var(--border-focus)}
+.ai-chips{display:flex;flex-wrap:wrap;gap:5px}
+.ai-chip{
+  padding:4px 10px;border:1px solid var(--border);border-radius:20px;
+  font-size:11px;color:var(--text-secondary);background:var(--bg-surface);
+  cursor:pointer;transition:all .12s;
+}
+.ai-chip:hover,.ai-chip.active{background:var(--accent-ai);border-color:var(--accent-ai);color:#fff}
+.ai-run{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px;background:linear-gradient(135deg,#7c3aed,#a855f7);
+  color:#fff;border-radius:8px;font-size:13px;font-weight:600;
+  transition:opacity .15s;
+}
+.ai-run:hover{opacity:.9}
+.ai-run:disabled{opacity:.55;cursor:default}
+.ai-error{font-size:12px;color:#dc2626;background:#fef2f2;padding:7px 10px;border-radius:6px}
+.ai-result-box{border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.ai-result-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 10px;background:var(--bg-app);
+  font-size:11px;font-weight:700;color:var(--text-secondary);
+}
+.ai-result-header button{padding:3px 5px;border-radius:4px;color:var(--text-muted);transition:background .12s;font-size:11px}
+.ai-result-header button:hover{background:var(--bg-hover)}
+.ai-result-text{padding:10px;font-size:12px;line-height:1.65;white-space:pre-wrap;max-height:180px;overflow-y:auto}
+.ai-insert-btn{
+  margin:0 10px 10px;padding:7px;background:var(--accent);color:#fff;
+  border-radius:7px;font-size:12px;font-weight:600;transition:background .15s;
+}
+.ai-insert-btn:hover{background:var(--accent-hover)}
+.ai-prefill{font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline;margin-top:2px;align-self:flex-start}
+
+/* ═══════════════════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);
+  display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(3px);
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--bg-surface);border-radius:14px;
+  box-shadow:var(--shadow-lg);width:100%;overflow:hidden;
+  animation:modalIn .18s ease;
+}
+@keyframes modalIn{from{transform:scale(.95) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  font-weight:700;font-size:14px;font-family:var(--font-display);
+}
+.modal-close{font-size:18px;color:var(--text-muted);padding:4px 6px;border-radius:5px;transition:all .12s}
+.modal-close:hover{background:var(--bg-hover);color:var(--text-primary)}
+.modal-body{padding:20px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.modal-btn{
+  padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600;transition:all .15s;
+}
+.modal-btn.primary{background:var(--accent);color:#fff}
+.modal-btn.primary:hover{background:var(--accent-hover)}
+.modal-btn.ghost{border:1px solid var(--border);color:var(--text-secondary)}
+.modal-btn.ghost:hover{background:var(--bg-hover)}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(--text-secondary)}
+.form-input{
+  padding:9px 12px;border:1px solid var(--border);border-radius:7px;
+  font-size:13px;background:var(--bg-input);transition:border-color .12s;
+}
+.form-input:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(26,63,168,.1)}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════ */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+.hidden{display:none!important}
+.tooltip{position:relative}
+.tooltip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;
+  transform:translateX(-50%);background:#1a1a2e;color:#fff;
+  font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity .15s;z-index:999;
+}
+.tooltip:hover::after{opacity:1}
+
+/* scrollbar styling */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+
+/* Print */
+@media print{
+  #titlebar,#tabbar,#ribbon,#statusbar,#ai-fab,#ai-panel{display:none!important}
+  #app{grid-template-rows:0 0 0 1fr 0}
+  .writer-page{box-shadow:none;padding:0}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ TITLEBAR ══════════════════════════════════════════ -->
+  <div id="titlebar">
+    <div class="tb-logo">
+      <div class="tb-logo-icon">W</div>
+      <span class="tb-logo-name">Web<span>Libra</span></span>
+    </div>
+    <div class="tb-save" id="tb-save-status"></div>
+    <div class="tb-controls">
+      <button class="tb-btn tooltip" data-tip="New Document" onclick="newDoc('writer')">📄</button>
+      <button class="tb-btn tooltip" data-tip="New Spreadsheet" onclick="newDoc('calc')">📊</button>
+      <button class="tb-btn tooltip" data-tip="New Presentation" onclick="newDoc('impress')">🎨</button>
+      <button class="tb-btn tooltip" data-tip="Toggle Theme" onclick="toggleTheme()">🌙</button>
+      <button class="tb-btn tooltip" data-tip="Print" onclick="window.print()">🖨️</button>
+    </div>
+    <div class="tb-user">
+      <div class="tb-avatar">N</div>
+      <span>Nilesh</span>
+    </div>
+  </div>
+
+  <!-- ══ TABBAR ═════════════════════════════════════════════ -->
+  <div id="tabbar">
+    <button class="tab-new-btn tooltip" data-tip="New Document" onclick="showDashboard()">+</button>
+  </div>
+
+  <!-- ══ RIBBON ════════════════════════════════════════════ -->
+  <div id="ribbon">
+    <div class="ribbon-tabs">
+      <button class="ribbon-tab-btn active" onclick="switchRibbonTab('home',this)">Home</button>
+      <button class="ribbon-tab-btn" onclick="switchRibbonTab('insert',this)">Insert</button>
+      <button class="ribbon-tab-btn" onclick="switchRibbonTab('layout',this)">Layout</button>
+      <button class="ribbon-tab-btn" onclick="switchRibbonTab('review',this)">Review</button>
+      <button class="ribbon-tab-btn" onclick="switchRibbonTab('view',this)">View</button>
+    </div>
+    <div class="ribbon-body">
+
+      <!-- HOME -->
+      <div class="ribbon-panel active" id="rp-home">
+        <div class="rg">
+          <div class="rg-body">
+            <button class="rb rb-lg tooltip" data-tip="Undo" id="btn-undo" onclick="execW('undo')"><span>↩</span><span class="rb-label">Undo</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Redo" id="btn-redo" onclick="execW('redo')"><span>↪</span><span class="rb-label">Redo</span></button>
+          </div>
+          <div class="rg-label">History</div>
+        </div>
+        <div class="rdiv"></div>
+        <div class="rg">
+          <div class="rg-body">
+            <select class="r-sel" id="font-family" style="width:110px" onchange="execW('fontName',this.value)" title="Font">
+              <option>Calibri</option><option>Arial</option><option>Times New Roman</option>
+              <option>Georgia</option><option>Courier New</option><option>Verdana</option><option>Trebuchet MS</option>
+            </select>
+            <select class="r-sel" id="font-size" style="width:52px" onchange="execW('fontSize',sizeMap[this.value]||3)" title="Size">
+              <option>8</option><option>9</option><option>10</option><option>11</option>
+              <option selected>12</option><option>14</option><option>16</option>
+              <option>18</option><option>20</option><option>24</option>
+              <option>28</option><option>32</option><option>36</option><option>48</option><option>72</option>
+            </select>
+          </div>
+          <div class="rg-body" style="margin-top:2px">
+            <button class="rb tooltip" data-tip="Bold (Ctrl+B)" id="btn-bold" onclick="fmtToggle('bold')"><b>B</b></button>
+            <button class="rb tooltip" data-tip="Italic (Ctrl+I)" id="btn-italic" onclick="fmtToggle('italic')"><i>I</i></button>
+            <button class="rb tooltip" data-tip="Underline (Ctrl+U)" id="btn-underline" onclick="fmtToggle('underline')"><u>U</u></button>
+            <button class="rb tooltip" data-tip="Strikethrough" id="btn-strike" onclick="fmtToggle('strikethrough')"><s>S</s></button>
+            <button class="rb tooltip" data-tip="Text Color" onclick="document.getElementById('txt-color').click()">A<input type="color" id="txt-color" style="opacity:0;position:absolute;width:0;height:0" oninput="execW('foreColor',this.value)"/></button>
+            <button class="rb tooltip" data-tip="Highlight" onclick="document.getElementById('hl-color').click()">🖊<input type="color" id="hl-color" value="#fff176" style="opacity:0;position:absolute;width:0;height:0" oninput="execW('hiliteColor',this.value)"/></button>
+          </div>
+          <div class="rg-label">Font</div>
+        </div>
+        <div class="rdiv"></div>
+        <div class="rg">
+          <div class="rg-body">
+            <div class="rb-row">
+              <button class="rb tooltip" data-tip="Align Left" onclick="execW('justifyLeft')">⬅</button>
+              <button class="rb tooltip" data-tip="Center" onclick="execW('justifyCenter')">≡</button>
+              <button class="rb tooltip" data-tip="Align Right" onclick="execW('justifyRight')">➡</button>
+              <button class="rb tooltip" data-tip="Justify" onclick="execW('justifyFull')">☰</button>
+            </div>
+            <div class="rb-row">
+              <button class="rb tooltip" data-tip="Bullet List" id="btn-ul" onclick="fmtToggle('insertUnorderedList')">• —</button>
+              <button class="rb tooltip" data-tip="Numbered List" id="btn-ol" onclick="fmtToggle('insertOrderedList')">1. —</button>
+              <button class="rb tooltip" data-tip="Indent" onclick="execW('indent')">⇥</button>
+              <button class="rb tooltip" data-tip="Outdent" onclick="execW('outdent')">⇤</button>
+            </div>
+          </div>
+          <div class="rg-label">Paragraph</div>
+        </div>
+        <div class="rdiv"></div>
+        <div class="rg">
+          <div class="rg-body">
+            <select class="r-sel" onchange="applyHeading(this.value);this.value=''" title="Heading Style" style="width:110px">
+              <option value="">— Styles —</option>
+              <option value="h1">Heading 1</option>
+              <option value="h2">Heading 2</option>
+              <option value="h3">Heading 3</option>
+              <option value="p">Normal</option>
+              <option value="pre">Code Block</option>
+              <option value="blockquote">Quote</option>
+            </select>
+            <button class="rb tooltip" data-tip="Clear Formatting" onclick="execW('removeFormat')">✕ fmt</button>
+          </div>
+          <div class="rg-label">Styles</div>
+        </div>
+      </div>
+
+      <!-- INSERT -->
+      <div class="ribbon-panel" id="rp-insert">
+        <div class="rg">
+          <div class="rg-body">
+            <button class="rb rb-lg tooltip" data-tip="Insert Table" onclick="insertTable()">⊞<span class="rb-label">Table</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Insert Image" onclick="insertImage()">🖼<span class="rb-label">Image</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Insert Link" onclick="insertLink()">🔗<span class="rb-label">Link</span></button>
+          </div>
+          <div class="rg-label">Objects</div>
+        </div>
+        <div class="rdiv"></div>
+        <div class="rg">
+          <div class="rg-body">
+            <button class="rb rb-lg tooltip" data-tip="Horizontal Rule" onclick="execW('insertHorizontalRule')">— <span class="rb-label">H.Rule</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Page Break" onclick="insertPageBreak()">⊡<span class="rb-label">Break</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Code Block" onclick="applyHeading('pre')">⌨<span class="rb-label">Code</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Blockquote" onclick="applyHeading('blockquote')">❝<span class="rb-label">Quote</span></button>
+          </div>
+          <div class="rg-label">Elements</div>
+        </div>
+        <div class="rdiv"></div>
+        <div class="rg">
+          <div class="rg-body">
+            <button class="rb rb-lg tooltip" data-tip="Insert Date/Time" onclick="insertDateTime()">📅<span class="rb-label">Date</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Word Count" onclick="showWordCount()">📝<span class="rb-label">Count</span></button>
+          </div>
+          <div class="rg-label">Quick</div>
+        </div>
+      </div>
+
+      <!-- LAYOUT -->
+      <div class="ribbon-panel" id="rp-layout">
+        <div class="rg">
+          <div class="rg-body">
+            <select class="r-sel" style="width:80px" title="Page Size" onchange="setPageSize(this.value)">
+              <option>A4</option><option selected>Letter</option><option>Legal</option><option>A3</option><option>A5</option>
+            </select>
+            <select class="r-sel" style="width:90px" title="Orientation" onchange="setOrientation(this.value)">
+              <option value="portrait">Portrait</option><option value="landscape">Landscape</option>
+            </select>
+          </div>
+          <div class="rg-label">Page Setup</div>
+        </div>
+        <div class="rdiv"></div>
+        <div class="rg">
+          <div class="rg-body">
+            <button class="rb rb-lg tooltip" data-tip="Normal Margins" onclick="setMargin('normal')">📄<span class="rb-label">Normal</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Narrow Margins" onclick="setMargin('narrow')">📋<span class="rb-label">Narrow</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Wide Margins" onclick="setMargin('wide')">📃<span class="rb-label">Wide</span></button>
+          </div>
+          <div class="rg-label">Margins</div>
+        </div>
+        <div class="rdiv"></div>
+        <div class="rg">
+          <div class="rg-body">
+            <button class="rb rb-lg tooltip" data-tip="Export as PDF" onclick="exportPDF()">📤<span class="rb-label">PDF</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Download HTML" onclick="downloadHTML()">💾<span class="rb-label">Save</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Download TXT" onclick="downloadTXT()">📝<span class="rb-label">TXT</span></button>
+          </div>
+          <div class="rg-label">Export</div>
+        </div>
+      </div>
+
+      <!-- REVIEW -->
+      <div class="ribbon-panel" id="rp-review">
+        <div class="rg">
+          <div class="rg-body">
+            <button class="rb rb-lg tooltip" data-tip="Spell Check (browser)" onclick="spellCheck()">✓<span class="rb-label">Spell</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Find & Replace" onclick="openFindReplace()">🔍<span class="rb-label">Find</span></button>
+          </div>
+          <div class="rg-label">Proofing</div>
+        </div>
+        <div class="rdiv"></div>
+        <div class="rg">
+          <div class="rg-body">
+            <button class="rb rb-lg tooltip" data-tip="Word Count" onclick="showWordCount()">📊<span class="rb-label">Stats</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Reading Mode" onclick="toggleReadMode()">📖<span class="rb-label">Read</span></button>
+          </div>
+          <div class="rg-label">Review</div>
+        </div>
+      </div>
+
+      <!-- VIEW -->
+      <div class="ribbon-panel" id="rp-view">
+        <div class="rg">
+          <div class="rg-body">
+            <button class="rb rb-lg tooltip" data-tip="Zoom In" onclick="setZoom(zoom+10)">🔍+<span class="rb-label">Zoom In</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Zoom Out" onclick="setZoom(zoom-10)">🔍-<span class="rb-label">Zoom Out</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Reset Zoom" onclick="setZoom(100)">100%<span class="rb-label">Reset</span></button>
+          </div>
+          <div class="rg-label">Zoom</div>
+        </div>
+        <div class="rdiv"></div>
+        <div class="rg">
+          <div class="rg-body">
+            <button class="rb rb-lg tooltip" data-tip="Toggle Dark Mode" onclick="toggleTheme()">🌙<span class="rb-label">Theme</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Full Screen" onclick="document.documentElement.requestFullscreen()">⛶<span class="rb-label">Full</span></button>
+            <button class="rb rb-lg tooltip" data-tip="Focus Mode" onclick="toggleFocusMode()">🎯<span class="rb-label">Focus</span></button>
+          </div>
+          <div class="rg-label">Display</div>
+        </div>
+      </div>
+
+    </div><!-- /ribbon-body -->
+  </div><!-- /ribbon -->
+
+  <!-- ══ MAIN CONTENT ═══════════════════════════════════════ -->
+  <div class="shell-content">
+
+    <!-- Dashboard -->
+    <div id="dashboard">
+      <div class="dash-inner">
+        <div class="dash-header">
+          <h1>Welcome to WebLibra</h1>
+          <p>Your open-source web office suite — create, edit, collaborate.</p>
+        </div>
+
+        <div>
+          <div class="dash-section-title">✦ Create New</div>
+          <div class="new-cards">
+            <button class="new-card" onclick="newDoc('writer')">
+              <span class="card-icon">📄</span>
+              <span>Document</span>
+            </button>
+            <button class="new-card" onclick="newDoc('calc')">
+              <span class="card-icon">📊</span>
+              <span>Spreadsheet</span>
+            </button>
+            <button class="new-card" onclick="newDoc('impress')">
+              <span class="card-icon">🎨</span>
+              <span>Presentation</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div class="dash-section-title">⬆ Upload</div>
+          <div class="upload-zone" id="upload-zone"
+               ondragover="event.preventDefault();this.classList.add('dragover')"
+               ondragleave="this.classList.remove('dragover')"
+               ondrop="handleDrop(event)"
+               onclick="document.getElementById('file-input').click()">
+            <span>📁</span>
+            <span>Drop a file here or <u>browse</u> to open</span>
+            <input type="file" id="file-input" hidden accept=".txt,.html,.htm" onchange="handleFileOpen(this)"/>
+          </div>
+        </div>
+
+        <div>
+          <div class="dash-section-title">🕐 Recent</div>
+          <div id="recent-grid" class="recent-grid">
+            <div class="empty-msg">No recent documents. Create one above.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Writer -->
+    <div id="writer-pane">
+      <div class="writer-scroll">
+        <div class="writer-page" id="writer-page">
+          <div id="writer-editor"
+               contenteditable="true"
+               spellcheck="true"
+               data-placeholder="Start typing your document…"
+               class="writer-placeholder"
+               oninput="onWriterInput()"
+               onkeydown="onWriterKeyDown(event)"
+               onmouseup="updateRibbonState()"
+               onkeyup="updateRibbonState()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calc -->
+    <div id="calc-pane">
+      <div id="calc-formula-bar">
+        <div id="calc-cell-addr">A1</div>
+        <span class="calc-fx">ƒx</span>
+        <input id="calc-formula-input" placeholder="Enter value or formula…"
+               oninput="calcFormulaInput()" onkeydown="calcFormulaKey(event)"/>
+      </div>
+      <div id="calc-canvas-wrap">
+        <canvas id="calc-canvas" onclick="calcClick(event)" ondblclick="calcDblClick(event)" onkeydown="calcKeyDown(event)" tabindex="0"></canvas>
+        <input id="calc-input-overlay" type="text" onblur="calcCommitEdit()" onkeydown="calcOverlayKey(event)"/>
+      </div>
+    </div>
+
+    <!-- Impress -->
+    <div id="impress-pane">
+      <div id="impress-panel">
+        <div id="impress-panel-header">
+          <button class="im-add-btn" onclick="impressAddSlide()">＋ New Slide</button>
+        </div>
+        <div id="impress-thumbs"></div>
+      </div>
+      <div id="impress-canvas-area">
+        <div id="impress-toolbar">
+          <button onclick="impressAddText()">✎ Text</button>
+          <label>BG <input type="color" value="#ffffff" id="im-bg-color" oninput="impressSetBg(this.value)"/></label>
+          <button id="im-delete-el" onclick="impressDeleteEl()" style="display:none;color:#dc2626">✕ Delete</button>
+          <span class="im-slide-count" id="im-slide-count">Slide 1 / 1</span>
+        </div>
+        <div id="impress-canvas-scroll" onclick="impressDeselectEl()">
+          <div id="impress-slide"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /shell-content -->
+
+  <!-- ══ STATUSBAR ═════════════════════════════════════════ -->
+  <div id="statusbar">
+    <span id="sb-type">WebLibra</span>
+    <div class="sb-sep"></div>
+    <span id="sb-words">Words: 0</span>
+    <span id="sb-chars">Chars: 0</span>
+    <div class="sb-sep"></div>
+    <span id="sb-doc-name">—</span>
+    <div class="sb-zoom">
+      <button onclick="setZoom(zoom-10)">−</button>
+      <input type="range" id="zoom-range" min="25" max="300" step="5" value="100" oninput="setZoom(+this.value)"/>
+      <span id="zoom-val">100%</span>
+      <button onclick="setZoom(zoom+10)">+</button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ══ AI ASSISTANT ══════════════════════════════════════ -->
+<button id="ai-fab" onclick="toggleAI()" title="AI Writing Assistant">✨</button>
+<div id="ai-panel">
+  <div class="ai-header">
+    <span>✨</span>
+    <span>AI Writing Assistant</span>
+    <button class="ai-close" onclick="toggleAI()">✕</button>
+  </div>
+  <div class="ai-body">
+    <div class="ai-label">
+      Anthropic API Key (BYOK)
+      <input class="ai-inp" type="password" id="ai-key" placeholder="sk-ant-…"/>
+    </div>
+    <div class="ai-chips" id="ai-chips"></div>
+    <div id="ai-custom-wrap" style="display:none">
+      <textarea class="ai-inp" id="ai-custom" rows="2" placeholder="Your instruction…"></textarea>
+    </div>
+    <div class="ai-label">
+      Text to process
+      <textarea class="ai-inp" id="ai-input" rows="4" placeholder="Paste text here…"></textarea>
+      <span class="ai-prefill" onclick="aiFillFromEditor()">Use current selection</span>
+    </div>
+    <div id="ai-error" class="ai-error" style="display:none"></div>
+    <button class="ai-run" id="ai-run" onclick="aiRun()">▶ Run</button>
+    <div id="ai-result-box" class="ai-result-box" style="display:none">
+      <div class="ai-result-header">
+        Result
+        <div style="display:flex;gap:4px">
+          <button onclick="aiCopy()">⧉ Copy</button>
+        </div>
+      </div>
+      <div class="ai-result-text" id="ai-result-text"></div>
+      <button class="ai-insert-btn" onclick="aiInsert()">Insert into document</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALS ════════════════════════════════════════════ -->
+<!-- Find & Replace -->
+<div class="modal-overlay" id="modal-find">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">Find & Replace <button class="modal-close" onclick="closeModal('modal-find')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Find</label><input class="form-input" id="find-text" placeholder="Search text…"/></div>
+      <div class="form-group"><label class="form-label">Replace with</label><input class="form-input" id="replace-text" placeholder="Replacement…"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" onclick="closeModal('modal-find')">Cancel</button>
+      <button class="modal-btn ghost" onclick="doFind()">Find Next</button>
+      <button class="modal-btn primary" onclick="doReplace()">Replace All</button>
+    </div>
+  </div>
+</div>
+
+<!-- Word Count -->
+<div class="modal-overlay" id="modal-wc">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-header">Document Statistics <button class="modal-close" onclick="closeModal('modal-wc')">✕</button></div>
+    <div class="modal-body" id="wc-body"></div>
+    <div class="modal-footer"><button class="modal-btn primary" onclick="closeModal('modal-wc')">Close</button></div>
+  </div>
+</div>
+
+<!-- Table Insert -->
+<div class="modal-overlay" id="modal-table">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-header">Insert Table <button class="modal-close" onclick="closeModal('modal-table')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Rows</label><input class="form-input" id="tbl-rows" type="number" value="3" min="1" max="20"/></div>
+      <div class="form-group"><label class="form-label">Columns</label><input class="form-input" id="tbl-cols" type="number" value="3" min="1" max="10"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" onclick="closeModal('modal-table')">Cancel</button>
+      <button class="modal-btn primary" onclick="doInsertTable()">Insert</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   WEBLIBRA — MAIN APPLICATION
+   Senior-grade vanilla JS — no dependencies, fully functional
+═══════════════════════════════════════════════════════════ */
+
+/* ── State ─────────────────────────────────────────────── */
+let tabs = [];
+let activeTabId = null;
+let zoom = 100;
+let theme = 'light';
+let focusMode = false;
+let autoSaveTimer = null;
+
+const sizeMap = {'8':1,'9':1,'10':2,'11':2,'12':3,'14':3,'16':4,'18':4,'20':5,'24':6,'28':6,'32':7,'36':7,'48':7,'72':7};
+
+/* ── Recent docs (localStorage) ────────────────────────── */
+function getRecent() {
+  try { return JSON.parse(localStorage.getItem('wl_recent') || '[]'); } catch { return []; }
+}
+function saveRecent(list) {
+  try { localStorage.setItem('wl_recent', JSON.stringify(list.slice(0,12))); } catch {}
+}
+function addRecent(tab) {
+  const list = getRecent().filter(r => r.id !== tab.id);
+  list.unshift({id:tab.id, name:tab.name, type:tab.type, savedAt: Date.now()});
+  saveRecent(list);
+  renderRecent();
+}
+function renderRecent() {
+  const grid = document.getElementById('recent-grid');
+  const list = getRecent();
+  if (!list.length) { grid.innerHTML = '<div class="empty-msg">No recent documents. Create one above.</div>'; return; }
+  const icons = {writer:'📄', calc:'📊', impress:'🎨'};
+  grid.innerHTML = list.map(r => `
+    <button class="recent-card" onclick="openRecentDoc('${r.id}')">
+      <span class="recent-card-icon">${icons[r.type]||'📄'}</span>
+      <span class="recent-card-name">${escHtml(r.name)}</span>
+      <span class="recent-card-date">${new Date(r.savedAt).toLocaleDateString()}</span>
+    </button>`).join('');
+}
+function openRecentDoc(id) {
+  const saved = JSON.parse(localStorage.getItem('wl_doc_' + id) || 'null');
+  if (!saved) { alert('Document not found — it may have been cleared.'); renderRecent(); return; }
+  const existing = tabs.find(t => t.id === id);
+  if (existing) { activateTab(id); return; }
+  const tab = {id, name: saved.name, type: saved.type, modified: false};
+  tabs.push(tab);
+  renderTabBar();
+  activateTab(id);
+  loadDocData(id, saved);
+}
+function loadDocData(id, saved) {
+  if (saved.type === 'writer') document.getElementById('writer-editor').innerHTML = saved.content || '';
+  if (saved.type === 'calc') { calcCells = saved.cells || {}; calcDraw(); }
+  if (saved.type === 'impress') { impressSlides = saved.slides || [defaultSlide()]; impressActive = 0; renderImpress(); }
+  updateStatus();
+}
+
+/* ── Document Save ─────────────────────────────────────── */
+function saveDoc(tabId) {
+  const tab = tabs.find(t => t.id === tabId);
+  if (!tab) return;
+  const data = {name: tab.name, type: tab.type};
+  if (tab.type === 'writer') data.content = document.getElementById('writer-editor').innerHTML;
+  if (tab.type === 'calc') data.cells = {...calcCells};
+  if (tab.type === 'impress') data.slides = JSON.parse(JSON.stringify(impressSlides));
+  try {
+    localStorage.setItem('wl_doc_' + tabId, JSON.stringify(data));
+    addRecent(tab);
+    markTabModified(tabId, false);
+    setSaveStatus('✓ Saved ' + new Date().toLocaleTimeString());
+  } catch(e) {
+    setSaveStatus('⚠ Save failed');
+  }
+}
+function setSaveStatus(msg) {
+  const el = document.getElementById('tb-save-status');
+  el.textContent = msg;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.textContent = ''; }, 4000);
+}
+function scheduleAutoSave() {
+  if (!activeTabId) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => saveDoc(activeTabId), 2500);
+  markTabModified(activeTabId, true);
+}
+
+/* ── Tab Management ─────────────────────────────────────── */
+function genId() { return 'wl_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+
+function newDoc(type) {
+  const names = {writer:'Document', calc:'Spreadsheet', impress:'Presentation'};
+  const count = tabs.filter(t => t.type === type).length + 1;
+  const tab = {id: genId(), name: names[type] + (count > 1 ? ' ' + count : ''), type, modified: false};
+  tabs.push(tab);
+  renderTabBar();
+  activateTab(tab.id);
+  // Initialize fresh content
+  if (type === 'writer') document.getElementById('writer-editor').innerHTML = '';
+  if (type === 'calc') { calcCells = {}; calcSelected = {r:0,c:0}; calcDraw(); }
+  if (type === 'impress') { impressSlides = [defaultSlide()]; impressActive = 0; renderImpress(); }
+  updateStatus();
+  document.getElementById('dashboard').style.display = 'none';
+}
+
+function activateTab(id) {
+  activeTabId = id;
+  const tab = tabs.find(t => t.id === id);
+  if (!tab) return;
+
+  // Hide all panes
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('writer-pane').classList.remove('active');
+  document.getElementById('calc-pane').classList.remove('active');
+  document.getElementById('impress-pane').classList.remove('active');
+
+  // Show correct pane
+  if (tab.type === 'writer') { document.getElementById('writer-pane').classList.add('active'); document.getElementById('writer-editor').focus(); }
+  if (tab.type === 'calc')   { document.getElementById('calc-pane').classList.add('active'); setTimeout(calcDraw, 50); }
+  if (tab.type === 'impress'){ document.getElementById('impress-pane').classList.add('active'); }
+
+  renderTabBar();
+  updateStatus();
+  document.getElementById('sb-doc-name').textContent = tab.name;
+  document.getElementById('sb-type').textContent = {writer:'Writer',calc:'Calc',impress:'Impress'}[tab.type];
+}
+
+function showDashboard() {
+  activeTabId = null;
+  document.getElementById('writer-pane').classList.remove('active');
+  document.getElementById('calc-pane').classList.remove('active');
+  document.getElementById('impress-pane').classList.remove('active');
+  document.getElementById('dashboard').style.display = '';
+  renderTabBar();
+  document.getElementById('sb-doc-name').textContent = '—';
+  document.getElementById('sb-type').textContent = 'WebLibra';
+  renderRecent();
+}
+
+function closeTab(id, e) {
+  if (e) e.stopPropagation();
+  const tab = tabs.find(t => t.id === id);
+  if (tab && tab.modified) {
+    if (!confirm(`"${tab.name}" has unsaved changes. Close anyway?`)) return;
+  }
+  tabs = tabs.filter(t => t.id !== id);
+  if (activeTabId === id) {
+    if (tabs.length) activateTab(tabs[tabs.length-1].id);
+    else showDashboard();
+  }
+  renderTabBar();
+}
+
+function markTabModified(id, v) {
+  const tab = tabs.find(t => t.id === id);
+  if (tab) { tab.modified = v; renderTabBar(); }
+}
+
+function renderTabBar() {
+  const bar = document.getElementById('tabbar');
+  const icons = {writer:'📄', calc:'📊', impress:'🎨'};
+  bar.innerHTML = tabs.map(tab => `
+    <div class="doc-tab${tab.id === activeTabId ? ' active' : ''}" onclick="activateTab('${tab.id}')">
+      <span>${icons[tab.type]}</span>
+      <span class="doc-tab-name">${escHtml(tab.name)}</span>
+      ${tab.modified ? '<span class="doc-tab-dot">●</span>' : ''}
+      <button class="doc-tab-close" onclick="closeTab('${tab.id}',event)" title="Close">✕</button>
+    </div>`).join('') +
+    `<button class="tab-new-btn" title="Dashboard" onclick="showDashboard()">+</button>`;
+
+  document.getElementById('app').classList.toggle('no-tabs', tabs.length === 0);
+}
+
+/* ── Writer Editor ──────────────────────────────────────── */
+function execW(cmd, val) {
+  const ed = document.getElementById('writer-editor');
+  ed.focus();
+  document.execCommand(cmd, false, val ?? null);
+  updateRibbonState();
+}
+
+function fmtToggle(cmd) {
+  execW(cmd);
+}
+
+function applyHeading(tag) {
+  const ed = document.getElementById('writer-editor');
+  ed.focus();
+  if (tag === 'pre' || tag === 'blockquote') {
+    document.execCommand('formatBlock', false, tag);
+  } else {
+    document.execCommand('formatBlock', false, '<' + tag + '>');
+  }
+  updateRibbonState();
+}
+
+function insertTable() {
+  document.getElementById('modal-table').classList.add('open');
+  document.getElementById('tbl-rows').focus();
+}
+function doInsertTable() {
+  const rows = parseInt(document.getElementById('tbl-rows').value) || 3;
+  const cols = parseInt(document.getElementById('tbl-cols').value) || 3;
+  const header = '<tr>' + Array.from({length:cols}, (_,i) => `<th>Header ${i+1}</th>`).join('') + '</tr>';
+  const body = Array.from({length:rows}, () => '<tr>' + Array.from({length:cols}, () => '<td>&nbsp;</td>').join('') + '</tr>').join('');
+  const html = `<table>${header}${body}</table><p></p>`;
+  execW('insertHTML', html);
+  closeModal('modal-table');
+}
+
+function insertImage() {
+  const url = prompt('Image URL (or paste a data URL):');
+  if (url) execW('insertHTML', `<img src="${url}" alt="image" style="max-width:100%"/>`);
+}
+
+function insertLink() {
+  const url = prompt('Link URL:');
+  if (!url) return;
+  const text = prompt('Link text (leave blank for URL):') || url;
+  execW('insertHTML', `<a href="${url}" target="_blank">${escHtml(text)}</a>`);
+}
+
+function insertPageBreak() {
+  execW('insertHTML', '<div style="page-break-after:always;border-top:2px dashed var(--border);margin:2em 0"></div><p></p>');
+}
+
+function insertDateTime() {
+  execW('insertText', new Date().toLocaleString());
+}
+
+function updateRibbonState() {
+  document.getElementById('btn-bold').classList.toggle('active', document.queryCommandState('bold'));
+  document.getElementById('btn-italic').classList.toggle('active', document.queryCommandState('italic'));
+  document.getElementById('btn-underline').classList.toggle('active', document.queryCommandState('underline'));
+  document.getElementById('btn-strike').classList.toggle('active', document.queryCommandState('strikethrough'));
+  document.getElementById('btn-ul').classList.toggle('active', document.queryCommandState('insertUnorderedList'));
+  document.getElementById('btn-ol').classList.toggle('active', document.queryCommandState('insertOrderedList'));
+  updateCounts();
+}
+
+function onWriterInput() {
+  updateRibbonState();
+  scheduleAutoSave();
+}
+
+function onWriterKeyDown(e) {
+  // Ctrl+S save
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveDoc(activeTabId); }
+  // Tab indent
+  if (e.key === 'Tab') { e.preventDefault(); execW('insertHTML', '&nbsp;&nbsp;&nbsp;&nbsp;'); }
+}
+
+function updateCounts() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab || tab.type !== 'writer') return;
+  const text = document.getElementById('writer-editor').innerText || '';
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  document.getElementById('sb-words').textContent = 'Words: ' + words;
+  document.getElementById('sb-chars').textContent = 'Chars: ' + text.length;
+}
+
+function updateStatus() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
+  updateCounts();
+}
+
+/* ── Layout ─────────────────────────────────────────────── */
+const pageSizes = {A4:'794px',Letter:'816px',Legal:'816px',A3:'1122px',A5:'559px'};
+function setPageSize(size) {
+  document.getElementById('writer-page').style.width = pageSizes[size] || '816px';
+  document.documentElement.style.setProperty('--page-w', pageSizes[size] || '816px');
+}
+function setOrientation(o) {
+  const page = document.getElementById('writer-page');
+  if (o === 'landscape') { page.style.width = '1056px'; page.style.minHeight = '816px'; }
+  else { page.style.width = ''; page.style.minHeight = ''; setPageSize(document.querySelector('[title="Page Size"]')?.value || 'Letter'); }
+}
+function setMargin(m) {
+  const page = document.getElementById('writer-page');
+  const margins = {normal:'72px 80px', narrow:'36px 36px', wide:'72px 120px'};
+  page.style.padding = margins[m] || margins.normal;
+}
+
+/* ── Export ─────────────────────────────────────────────── */
+function exportPDF() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab || tab.type !== 'writer') { alert('Switch to a document to export as PDF.'); return; }
+  window.print();
+}
+function downloadHTML() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab || tab.type !== 'writer') { alert('Switch to a document to download.'); return; }
+  const content = document.getElementById('writer-editor').innerHTML;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${tab.name}</title><style>body{font-family:Calibri,sans-serif;font-size:14px;line-height:1.65;max-width:800px;margin:40px auto;padding:0 20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:6px 10px}</style></head><body>${content}</body></html>`;
+  downloadBlob(html, tab.name + '.html', 'text/html');
+}
+function downloadTXT() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab || tab.type !== 'writer') return;
+  const text = document.getElementById('writer-editor').innerText;
+  downloadBlob(text, tab.name + '.txt', 'text/plain');
+}
+function downloadBlob(content, name, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], {type: mime}));
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ── Find & Replace ─────────────────────────────────────── */
+function openFindReplace() {
+  document.getElementById('modal-find').classList.add('open');
+  document.getElementById('find-text').focus();
+}
+function doFind() {
+  const q = document.getElementById('find-text').value;
+  if (!q) return;
+  window.find(q);
+}
+function doReplace() {
+  const q = document.getElementById('find-text').value;
+  const r = document.getElementById('replace-text').value;
+  if (!q) return;
+  const ed = document.getElementById('writer-editor');
+  ed.innerHTML = ed.innerHTML.split(q).join(r);
+  closeModal('modal-find');
+  scheduleAutoSave();
+}
+
+/* ── Spell Check ────────────────────────────────────────── */
+function spellCheck() {
+  const ed = document.getElementById('writer-editor');
+  ed.spellcheck = !ed.spellcheck;
+  setSaveStatus(ed.spellcheck ? '✓ Spell check on' : '○ Spell check off');
+}
+
+/* ── Word Count ─────────────────────────────────────────── */
+function showWordCount() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  const ed = document.getElementById('writer-editor');
+  const text = ed.innerText || '';
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const sents = text.split(/[.!?]+/).filter(s => s.trim()).length;
+  const paras = text.split(/\n+/).filter(p => p.trim()).length;
+  document.getElementById('wc-body').innerHTML = `
+    <table style="width:100%;border-collapse:collapse">
+      <tr><td style="padding:6px 0;color:var(--text-secondary)">Words</td><td style="font-weight:700">${words}</td></tr>
+      <tr><td style="padding:6px 0;color:var(--text-secondary)">Characters</td><td style="font-weight:700">${text.length}</td></tr>
+      <tr><td style="padding:6px 0;color:var(--text-secondary)">Characters (no spaces)</td><td style="font-weight:700">${text.replace(/\s/g,'').length}</td></tr>
+      <tr><td style="padding:6px 0;color:var(--text-secondary)">Sentences</td><td style="font-weight:700">${sents}</td></tr>
+      <tr><td style="padding:6px 0;color:var(--text-secondary)">Paragraphs</td><td style="font-weight:700">${paras}</td></tr>
+      <tr><td style="padding:6px 0;color:var(--text-secondary)">Est. reading time</td><td style="font-weight:700">${Math.ceil(words/200)} min</td></tr>
+    </table>`;
+  document.getElementById('modal-wc').classList.add('open');
+}
+
+/* ── Read / Focus Mode ──────────────────────────────────── */
+function toggleReadMode() {
+  const ed = document.getElementById('writer-editor');
+  const isRead = ed.contentEditable === 'false';
+  ed.contentEditable = isRead ? 'true' : 'false';
+  setSaveStatus(isRead ? '✏ Edit mode' : '📖 Read mode');
+}
+function toggleFocusMode() {
+  focusMode = !focusMode;
+  document.getElementById('ribbon').style.display = focusMode ? 'none' : '';
+  document.getElementById('titlebar').style.display = focusMode ? 'none' : '';
+  document.getElementById('tabbar').style.display = focusMode ? 'none' : '';
+  document.getElementById('app').style.gridTemplateRows = focusMode
+    ? '0 0 0 1fr var(--statusbar-h)'
+    : '';
+  setSaveStatus(focusMode ? '🎯 Focus mode — press Esc to exit' : '✓ Normal view');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && focusMode) toggleFocusMode(); });
+
+/* ── File Open ──────────────────────────────────────────── */
+function handleFileOpen(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    newDoc('writer');
+    const tab = tabs[tabs.length - 1];
+    tab.name = file.name;
+    renderTabBar();
+    document.getElementById('sb-doc-name').textContent = file.name;
+    const content = e.target.result;
+    document.getElementById('writer-editor').innerHTML =
+      file.name.endsWith('.html') || file.name.endsWith('.htm')
+        ? content : `<pre>${escHtml(content)}</pre>`;
+    updateRibbonState();
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  document.getElementById('file-input').files = e.dataTransfer.files;
+  handleFileOpen(document.getElementById('file-input'));
+}
+
+/* ── Zoom ────────────────────────────────────────────────── */
+function setZoom(v) {
+  zoom = Math.max(25, Math.min(300, v));
+  document.getElementById('zoom-range').value = zoom;
+  document.getElementById('zoom-val').textContent = zoom + '%';
+  const page = document.getElementById('writer-page');
+  page.style.transform = `scale(${zoom/100})`;
+  page.style.transformOrigin = 'top center';
+  page.style.marginBottom = zoom < 100 ? (zoom - 100) * 10 + 'px' : '';
+}
+
+/* ── Theme ───────────────────────────────────────────────── */
+function toggleTheme() {
+  theme = theme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem('wl_theme', theme); } catch {}
+}
+(function() {
+  try { const t = localStorage.getItem('wl_theme'); if (t) { theme = t; document.documentElement.setAttribute('data-theme', t); } } catch {}
+})();
+
+/* ── Modals ──────────────────────────────────────────────── */
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   CALC EDITOR
+═══════════════════════════════════════════════════════════ */
+const CALC_COLS = 26, CALC_ROWS = 60;
+const COL_W = 100, ROW_H = 24, HDR_W = 46, HDR_H = 24;
+let calcCells = {};
+let calcSelected = {r:0, c:0};
+let calcEditing = false;
+
+const calcCanvas = document.getElementById('calc-canvas');
+const calcCtx = calcCanvas.getContext('2d');
+const calcOverlay = document.getElementById('calc-input-overlay');
+const calcFormulaInput = document.getElementById('calc-formula-input');
+const calcAddrEl = document.getElementById('calc-cell-addr');
+
+function calcKey(r, c) { return r + ',' + c; }
+function calcColLabel(c) { return String.fromCharCode(65 + c); }
+function calcCellLabel(r, c) { return calcColLabel(c) + (r + 1); }
+
+function calcEval(val) {
+  if (!val || !val.startsWith('=')) return val;
+  const expr = val.slice(1).toUpperCase()
+    .replace(/SUM\(([A-Z]\d+):([A-Z]\d+)\)/g, (_,a,b) => {
+      return calcRange(a,b).reduce((s,v) => s + (parseFloat(v)||0), 0);
+    })
+    .replace(/AVG\(([A-Z]\d+):([A-Z]\d+)\)/g, (_,a,b) => {
+      const vals = calcRange(a,b).map(v => parseFloat(v)||0);
+      return vals.length ? vals.reduce((s,v) => s+v,0)/vals.length : 0;
+    })
+    .replace(/COUNT\(([A-Z]\d+):([A-Z]\d+)\)/g, (_,a,b) => calcRange(a,b).filter(v => v !== '').length)
+    .replace(/MAX\(([A-Z]\d+):([A-Z]\d+)\)/g, (_,a,b) => Math.max(...calcRange(a,b).map(v => parseFloat(v)||0)))
+    .replace(/MIN\(([A-Z]\d+):([A-Z]\d+)\)/g, (_,a,b) => Math.min(...calcRange(a,b).map(v => parseFloat(v)||0)))
+    .replace(/([A-Z])(\d+)/g, (_,col,row) => {
+      const val = calcCells[calcKey(parseInt(row)-1, col.charCodeAt(0)-65)] || '0';
+      return isNaN(val) ? '0' : val;
+    });
+  try { const r = Function('"use strict";return (' + expr + ')')(); return isFinite(r) ? Math.round(r*1e10)/1e10 : r; }
+  catch { return '#ERR'; }
+}
+
+function calcRange(a, b) {
+  const c1 = a.charCodeAt(0)-65, r1 = parseInt(a.slice(1))-1;
+  const c2 = b.charCodeAt(0)-65, r2 = parseInt(b.slice(1))-1;
+  const vals = [];
+  for (let r = Math.min(r1,r2); r <= Math.max(r1,r2); r++)
+    for (let c = Math.min(c1,c2); c <= Math.max(c1,c2); c++)
+      vals.push(calcCells[calcKey(r,c)] || '');
+  return vals;
+}
+
+function calcDraw() {
+  const W = HDR_W + CALC_COLS * COL_W;
+  const H = HDR_H + CALC_ROWS * ROW_H;
+  calcCanvas.width = W;
+  calcCanvas.height = H;
+  calcCtx.clearRect(0, 0, W, H);
+  calcCtx.font = '12px "DM Sans", sans-serif';
+
+  // Column headers
+  calcCtx.fillStyle = 'var(--bg-app)';
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg-sidebar').trim() || '#f5f7fb';
+  const bdr = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#d4ddf0';
+  const txt = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#0f1b3d';
+  const acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#1a3fa8';
+  const accL = getComputedStyle(document.documentElement).getPropertyValue('--accent-light').trim() || '#dce7ff';
+
+  calcCtx.fillStyle = bg;
+  calcCtx.fillRect(0, 0, W, HDR_H);
+  calcCtx.fillRect(0, 0, HDR_W, H);
+
+  for (let c = 0; c < CALC_COLS; c++) {
+    const x = HDR_W + c * COL_W;
+    calcCtx.strokeStyle = bdr;
+    calcCtx.lineWidth = 1;
+    calcCtx.strokeRect(x, 0, COL_W, HDR_H);
+    calcCtx.fillStyle = c === calcSelected.c ? accL : bg;
+    calcCtx.fillRect(x+1, 1, COL_W-1, HDR_H-1);
+    calcCtx.fillStyle = c === calcSelected.c ? acc : txt;
+    calcCtx.textAlign = 'center';
+    calcCtx.textBaseline = 'middle';
+    calcCtx.fillText(calcColLabel(c), x + COL_W/2, HDR_H/2);
+  }
+  for (let r = 0; r < CALC_ROWS; r++) {
+    const y = HDR_H + r * ROW_H;
+    calcCtx.strokeStyle = bdr;
+    calcCtx.strokeRect(0, y, HDR_W, ROW_H);
+    calcCtx.fillStyle = r === calcSelected.r ? accL : bg;
+    calcCtx.fillRect(1, y+1, HDR_W-1, ROW_H-1);
+    calcCtx.fillStyle = r === calcSelected.r ? acc : txt;
+    calcCtx.textAlign = 'center';
+    calcCtx.textBaseline = 'middle';
+    calcCtx.fillText(String(r+1), HDR_W/2, y + ROW_H/2);
+  }
+
+  // Cells
+  calcCtx.textAlign = 'left';
+  for (let r = 0; r < CALC_ROWS; r++) {
+    for (let c = 0; c < CALC_COLS; c++) {
+      const x = HDR_W + c * COL_W;
+      const y = HDR_H + r * ROW_H;
+      const isSel = r === calcSelected.r && c === calcSelected.c;
+
+      if (isSel) {
+        calcCtx.fillStyle = accL;
+        calcCtx.fillRect(x+1, y+1, COL_W-1, ROW_H-1);
+        calcCtx.strokeStyle = acc;
+        calcCtx.lineWidth = 2;
+        calcCtx.strokeRect(x, y, COL_W, ROW_H);
+        calcCtx.lineWidth = 1;
+      } else {
+        calcCtx.strokeStyle = bdr;
+        calcCtx.strokeRect(x, y, COL_W, ROW_H);
+      }
+
+      const raw = calcCells[calcKey(r,c)] || '';
+      const display = isSel && calcEditing ? '' : calcEval(raw);
+      if (display !== '') {
+        calcCtx.fillStyle = txt;
+        calcCtx.font = '12px "DM Sans", sans-serif';
+        const s = String(display).slice(0, 14);
+        calcCtx.fillText(s, x + 4, y + ROW_H/2);
+      }
+    }
+  }
+
+  calcAddrEl.textContent = calcCellLabel(calcSelected.r, calcSelected.c);
+  calcFormulaInput.value = calcEditing ? calcOverlay.value : (calcCells[calcKey(calcSelected.r, calcSelected.c)] || '');
+}
+
+function calcShowOverlay() {
+  const x = HDR_W + calcSelected.c * COL_W;
+  const y = HDR_H + calcSelected.r * ROW_H;
+  const wrap = document.getElementById('calc-canvas-wrap');
+  calcOverlay.style.left = x + 'px';
+  calcOverlay.style.top = y + 'px';
+  calcOverlay.style.width = COL_W + 'px';
+  calcOverlay.style.height = ROW_H + 'px';
+  calcOverlay.style.display = 'block';
+  calcOverlay.value = calcCells[calcKey(calcSelected.r, calcSelected.c)] || '';
+  calcOverlay.focus();
+  calcEditing = true;
+  calcDraw();
+}
+
+function calcHideOverlay() {
+  calcOverlay.style.display = 'none';
+  calcEditing = false;
+}
+
+function calcCommitEdit() {
+  const val = calcOverlay.value;
+  if (val === '') delete calcCells[calcKey(calcSelected.r, calcSelected.c)];
+  else calcCells[calcKey(calcSelected.r, calcSelected.c)] = val;
+  calcHideOverlay();
+  calcDraw();
+  scheduleAutoSave();
+}
+
+function calcClick(e) {
+  const rect = calcCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  if (mx < HDR_W || my < HDR_H) return;
+  calcSelected = {r: Math.floor((my-HDR_H)/ROW_H), c: Math.floor((mx-HDR_W)/COL_W)};
+  calcHideOverlay();
+  calcCanvas.focus();
+  calcDraw();
+}
+
+function calcDblClick(e) { calcShowOverlay(); }
+
+function calcKeyDown(e) {
+  const {r,c} = calcSelected;
+  if (e.key === 'ArrowRight') { calcSelected.c = Math.min(c+1,CALC_COLS-1); calcDraw(); }
+  else if (e.key === 'ArrowLeft') { calcSelected.c = Math.max(c-1,0); calcDraw(); }
+  else if (e.key === 'ArrowDown' || e.key === 'Enter') { calcSelected.r = Math.min(r+1,CALC_ROWS-1); calcDraw(); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { calcSelected.r = Math.max(r-1,0); calcDraw(); }
+  else if (e.key === 'Delete' || e.key === 'Backspace') { delete calcCells[calcKey(r,c)]; calcDraw(); scheduleAutoSave(); }
+  else if (e.key === 'F2') { calcShowOverlay(); }
+  else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) { calcShowOverlay(); calcOverlay.value = e.key; e.preventDefault(); }
+  else if ((e.ctrlKey||e.metaKey) && e.key === 's') { e.preventDefault(); saveDoc(activeTabId); }
+}
+function calcOverlayKey(e) {
+  if (e.key === 'Enter') { calcCommitEdit(); calcSelected.r = Math.min(calcSelected.r+1, CALC_ROWS-1); calcDraw(); }
+  else if (e.key === 'Tab') { e.preventDefault(); calcCommitEdit(); calcSelected.c = Math.min(calcSelected.c+1, CALC_COLS-1); calcDraw(); calcShowOverlay(); }
+  else if (e.key === 'Escape') { calcHideOverlay(); calcDraw(); }
+}
+function calcFormulaKey(e) {
+  if (e.key === 'Enter') {
+    calcCells[calcKey(calcSelected.r, calcSelected.c)] = calcFormulaInput.value;
+    calcFormulaInput.blur();
+    calcDraw();
+    scheduleAutoSave();
+  }
+}
+document.getElementById('calc-formula-input').addEventListener('focus', () => {
+  calcFormulaInput.value = calcCells[calcKey(calcSelected.r, calcSelected.c)] || '';
+});
+
+/* ═══════════════════════════════════════════════════════════
+   IMPRESS EDITOR
+═══════════════════════════════════════════════════════════ */
+let impressSlides = [];
+let impressActive = 0;
+let impressSelectedEl = null;
+let impressDragState = null;
+
+function defaultSlide() {
+  return {
+    id: genId(),
+    background: '#ffffff',
+    elements: [
+      {id:genId(), type:'text', x:80, y:150, w:720, h:80, content:'Click to edit title', style:{fontSize:36,color:'#0f1b3d',bold:true, italic:false}},
+      {id:genId(), type:'text', x:80, y:260, w:720, h:60, content:'Subtitle text here', style:{fontSize:20,color:'#4a5a80',bold:false, italic:false}},
+    ]
+  };
+}
+
+function impressAddSlide() {
+  const s = defaultSlide();
+  impressSlides.push(s);
+  impressActive = impressSlides.length - 1;
+  renderImpress();
+  scheduleAutoSave();
+}
+
+function impressDeleteSlide(idx, e) {
+  e && e.stopPropagation();
+  if (impressSlides.length <= 1) return;
+  impressSlides.splice(idx, 1);
+  impressActive = Math.max(0, impressActive - (idx <= impressActive ? 1 : 0));
+  renderImpress();
+  scheduleAutoSave();
+}
+
+function impressMoveSlide(idx, dir, e) {
+  e && e.stopPropagation();
+  const next = idx + dir;
+  if (next < 0 || next >= impressSlides.length) return;
+  [impressSlides[idx], impressSlides[next]] = [impressSlides[next], impressSlides[idx]];
+  impressActive = next;
+  renderImpress();
+  scheduleAutoSave();
+}
+
+function impressActivate(idx) {
+  impressActive = idx;
+  impressSelectedEl = null;
+  renderImpress();
+}
+
+function impressAddText() {
+  const s = impressSlides[impressActive];
+  const el = {id:genId(), type:'text', x:120, y:180, w:400, h:60, content:'New text box', style:{fontSize:18,color:'#0f1b3d',bold:false,italic:false}};
+  s.elements.push(el);
+  impressSelectedEl = el.id;
+  renderSlideCanvas();
+  renderThumbs();
+  scheduleAutoSave();
+}
+
+function impressDeleteEl() {
+  if (!impressSelectedEl) return;
+  const s = impressSlides[impressActive];
+  s.elements = s.elements.filter(e => e.id !== impressSelectedEl);
+  impressSelectedEl = null;
+  document.getElementById('im-delete-el').style.display = 'none';
+  renderSlideCanvas();
+  renderThumbs();
+  scheduleAutoSave();
+}
+
+function impressSetBg(color) {
+  impressSlides[impressActive].background = color;
+  document.getElementById('impress-slide').style.background = color;
+  renderThumbs();
+  scheduleAutoSave();
+}
+
+function impressDeselectEl() {
+  impressSelectedEl = null;
+  document.querySelectorAll('.im-el').forEach(e => e.classList.remove('selected'));
+  document.getElementById('im-delete-el').style.display = 'none';
+}
+
+function renderImpress() {
+  renderThumbs();
+  renderSlideCanvas();
+  document.getElementById('im-slide-count').textContent =
+    `Slide ${impressActive+1} / ${impressSlides.length}`;
+  document.getElementById('im-bg-color').value = impressSlides[impressActive].background || '#ffffff';
+}
+
+function renderThumbs() {
+  const container = document.getElementById('impress-thumbs');
+  container.innerHTML = impressSlides.map((s, i) => `
+    <div class="im-thumb-wrap">
+      <div class="im-thumb ${i===impressActive?'active':''}" onclick="impressActivate(${i})" style="background:${s.background||'#fff'}">
+        <span class="im-thumb-num">${i+1}</span>
+        ${s.elements.slice(0,3).map(el => `
+          <div class="im-thumb-el" style="
+            left:${(el.x/880*100).toFixed(1)}%;top:${(el.y/495*100).toFixed(1)}%;
+            width:${(el.w/880*100).toFixed(1)}%;
+            font-size:${((el.style.fontSize||14)*0.17).toFixed(1)}px;
+            color:${el.style.color||'#000'};
+            font-weight:${el.style.bold?700:400};
+            font-style:${el.style.italic?'italic':'normal'};
+          ">${escHtml(el.content||'')}</div>`).join('')}
+      </div>
+      <div class="im-thumb-actions">
+        <button onclick="impressMoveSlide(${i},-1,event)" ${i===0?'disabled':''}>▲</button>
+        <button onclick="impressMoveSlide(${i},1,event)" ${i===impressSlides.length-1?'disabled':''}>▼</button>
+        <button onclick="impressDeleteSlide(${i},event)" ${impressSlides.length===1?'disabled':''} style="color:#dc2626">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderSlideCanvas() {
+  const slide = impressSlides[impressActive];
+  const container = document.getElementById('impress-slide');
+  container.style.background = slide.background || '#ffffff';
+  container.innerHTML = slide.elements.map(el => `
+    <div class="im-el ${el.id===impressSelectedEl?'selected':''}"
+         id="imel-${el.id}"
+         data-id="${el.id}"
+         style="left:${el.x}px;top:${el.y}px;width:${el.w}px;min-height:${el.h}px;
+                font-size:${el.style.fontSize||16}px;color:${el.style.color||'#000'};
+                font-weight:${el.style.bold?700:400};font-style:${el.style.italic?'italic':'normal'}"
+         onclick="impressSelectEl(event,'${el.id}')"
+         ondblclick="impressEditEl(event,'${el.id}')">
+      <span>${escHtml(el.content||'')}</span>
+    </div>`).join('');
+
+  // Drag to move elements
+  container.querySelectorAll('.im-el').forEach(el => {
+    el.addEventListener('mousedown', impressStartDrag);
+  });
+}
+
+function impressSelectEl(e, id) {
+  e.stopPropagation();
+  impressSelectedEl = id;
+  document.querySelectorAll('.im-el').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('imel-' + id);
+  if (el) el.classList.add('selected');
+  document.getElementById('im-delete-el').style.display = '';
+}
+
+function impressEditEl(e, id) {
+  e.stopPropagation();
+  const s = impressSlides[impressActive];
+  const elData = s.elements.find(el => el.id === id);
+  if (!elData) return;
+  const domEl = document.getElementById('imel-' + id);
+  if (!domEl) return;
+  domEl.innerHTML = `<textarea
+    style="width:100%;min-height:${elData.h}px;border:none;outline:none;background:transparent;
+           resize:none;font-size:${elData.style.fontSize}px;color:${elData.style.color};
+           font-weight:${elData.style.bold?700:400};font-family:var(--font-ui);line-height:1.3;padding:0;"
+    onblur="impressFinishEdit('${id}',this.value)"
+    onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){this.blur()}"
+  >${elData.content||''}</textarea>`;
+  domEl.querySelector('textarea').focus();
+}
+
+function impressFinishEdit(id, val) {
+  const s = impressSlides[impressActive];
+  const elData = s.elements.find(el => el.id === id);
+  if (elData) elData.content = val;
+  renderSlideCanvas();
+  renderThumbs();
+  scheduleAutoSave();
+}
+
+function impressStartDrag(e) {
+  if (e.target.tagName === 'TEXTAREA') return;
+  const domEl = e.currentTarget;
+  const id = domEl.dataset.id;
+  const s = impressSlides[impressActive];
+  const elData = s.elements.find(el => el.id === id);
+  if (!elData) return;
+  const startX = e.clientX - elData.x;
+  const startY = e.clientY - elData.y;
+  impressSelectEl(e, id);
+
+  function onMove(e2) {
+    elData.x = Math.max(0, e2.clientX - startX);
+    elData.y = Math.max(0, e2.clientY - startY);
+    domEl.style.left = elData.x + 'px';
+    domEl.style.top = elData.y + 'px';
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    renderThumbs();
+    scheduleAutoSave();
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  e.preventDefault();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AI ASSISTANT
+═══════════════════════════════════════════════════════════ */
+const AI_PROMPTS = [
+  {label:'Improve writing', p:'Rewrite the following text to improve clarity and flow, keeping the same meaning:'},
+  {label:'Make shorter',    p:'Summarise the following text concisely in fewer words:'},
+  {label:'Make formal',     p:'Rewrite in a formal, professional tone:'},
+  {label:'Fix grammar',     p:'Fix all grammar and spelling errors in the following text:'},
+  {label:'Translate Hindi', p:'Translate the following text to Hindi:'},
+  {label:'Custom…',         p:''},
+];
+let aiChipIdx = 0;
+
+(function initAI() {
+  const chips = document.getElementById('ai-chips');
+  chips.innerHTML = AI_PROMPTS.map((p,i) =>
+    `<button class="ai-chip ${i===0?'active':''}" onclick="aiSelectChip(${i})">${p.label}</button>`
+  ).join('');
+  try { const k = sessionStorage.getItem('wl_aik'); if (k) document.getElementById('ai-key').value = k; } catch {}
+})();
+
+function aiSelectChip(i) {
+  aiChipIdx = i;
+  document.querySelectorAll('.ai-chip').forEach((c,j) => c.classList.toggle('active', j===i));
+  document.getElementById('ai-custom-wrap').style.display = i === AI_PROMPTS.length-1 ? '' : 'none';
+}
+
+function toggleAI() {
+  document.getElementById('ai-panel').classList.toggle('open');
+}
+
+function aiFillFromEditor() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab || tab.type !== 'writer') return;
+  const sel = window.getSelection();
+  const text = sel && sel.toString().trim();
+  if (text) {
+    document.getElementById('ai-input').value = text;
+  } else {
+    document.getElementById('ai-input').value = document.getElementById('writer-editor').innerText.slice(0, 2000);
+  }
+}
+
+async function aiRun() {
+  const key = document.getElementById('ai-key').value.trim();
+  if (!key) { showAiError('Enter your Anthropic API key first.'); return; }
+
+  const instruction = aiChipIdx < AI_PROMPTS.length - 1
+    ? AI_PROMPTS[aiChipIdx].p
+    : document.getElementById('ai-custom').value.trim();
+  const inputText = document.getElementById('ai-input').value.trim();
+  if (!instruction) { showAiError('Select or type an instruction.'); return; }
+  if (!inputText) { showAiError('Provide text to process.'); return; }
+
+  const btn = document.getElementById('ai-run');
+  btn.disabled = true;
+  btn.textContent = '⏳ Processing…';
+  document.getElementById('ai-error').style.display = 'none';
+  document.getElementById('ai-result-box').style.display = 'none';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{role:'user', content:`${instruction}\n\n${inputText}`}]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err?.error?.message || `API error ${res.status}`);
+    }
+
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    document.getElementById('ai-result-text').textContent = text;
+    document.getElementById('ai-result-box').style.display = '';
+    try { sessionStorage.setItem('wl_aik', key); } catch {}
+  } catch(e) {
+    showAiError(e.message || 'Request failed');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Run';
+  }
+}
+
+function showAiError(msg) {
+  const el = document.getElementById('ai-error');
+  el.textContent = msg;
+  el.style.display = '';
+}
+
+function aiCopy() {
+  const text = document.getElementById('ai-result-text').textContent;
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+function aiInsert() {
+  const text = document.getElementById('ai-result-text').textContent;
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab || tab.type !== 'writer') { alert('Switch to a document to insert text.'); return; }
+  document.getElementById('writer-editor').focus();
+  const sel = window.getSelection();
+  if (sel.rangeCount) {
+    sel.getRangeAt(0).deleteContents();
+    sel.getRangeAt(0).insertNode(document.createTextNode(text));
+  } else {
+    document.getElementById('writer-editor').innerHTML += '<p>' + escHtml(text) + '</p>';
+  }
+  toggleAI();
+  scheduleAutoSave();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════════════════ */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* Ribbon tab switching */
+function switchRibbonTab(name, btn) {
+  document.querySelectorAll('.ribbon-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.ribbon-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('rp-' + name).classList.add('active');
+}
+
+/* ── Init ───────────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  renderRecent();
+  renderTabBar();
+  document.getElementById('app').classList.add('no-tabs');
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey||e.metaKey) && e.key === 's') { e.preventDefault(); if (activeTabId) saveDoc(activeTabId); }
+    if ((e.ctrlKey||e.metaKey) && e.key === 'z') { if (activeTabId) { const t = tabs.find(t=>t.id===activeTabId); if(t&&t.type==='writer') scheduleAutoSave(); } }
+  });
+});
+
+// Warn on unload if unsaved
+window.addEventListener('beforeunload', e => {
+  if (tabs.some(t => t.modified)) {
+    e.preventDefault();
+    e.returnValue = 'You have unsaved changes.';
+  }
+});
+</script>
+</body>
+</html>
